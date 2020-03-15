@@ -1,0 +1,100 @@
+from string import ascii_lowercase
+from Words import get_random_word_from_file
+
+
+def set_attempts_amount():
+    """Get user-inputted number of incorrect attempts for the game."""
+    while True:
+        num_attempts = input(
+            'How many incorrect attempts do you want? [1-25] ')
+        try:
+            num_attempts = int(num_attempts)
+            if 1 <= num_attempts <= 25:
+                return num_attempts
+            else:
+                print('{0} is not between 1 and 25'.format(num_attempts))
+        except ValueError:
+            print('{0} is not an integer between 1 and 25'.format(
+                num_attempts))
+
+
+def set_min_word_length():
+    while True:
+        min_word_length = input('Enter desired min word length : [2-16] ')
+        try:
+            min_word_length = int(min_word_length)
+            if 2 <= min_word_length <= 16:
+                return min_word_length
+            else:
+                print('{0} is not between 2 and 16'.format(min_word_length))
+        except ValueError:
+            print('{0} - is not an integer'.format(min_word_length))
+
+
+def display_partial_guessed_word(word, is_correct_letters_array):
+    if len(word) != len(is_correct_letters_array):
+        raise ValueError('Program Failure - Original Word & "is_correct_letters_array" has different lengths !')
+    #  #####  LEARN THIS SHORT SYNTAX :  #####
+    displayed_word = ''.join([char if is_correct_letters_array[i] else '*' for i, char in enumerate(word)])
+    return displayed_word.strip()
+
+
+def guess_next_letter():
+    while True:
+        next_letter_guess = input('Guess a letter : ').lower()
+        if len(next_letter_guess) != 1:
+            print('{0} is not a single character'.format(next_letter_guess))
+        elif next_letter_guess not in ascii_lowercase:
+            print('{0} is not a letter'.format(next_letter_guess))
+        else:
+            return next_letter_guess
+
+
+def play_hangman():
+    print('Starting Game....')
+    attempts_left = set_attempts_amount()
+    min_word_length = set_min_word_length()
+    print('Selecting random word from list ...')
+    word = get_random_word_from_file(min_word_length)
+    print()
+
+    # Initialize variables :
+    #  #####  LEARN THIS SHORT SYNTAX :  #####
+    is_correct_letters_array = [letter not in ascii_lowercase for letter in word]
+    # print(letters_array)  # => [False, False, False] => according to word length
+
+    # print(set(ascii_lowercase))  # => prints 26 letters unsorted => {'m', 'k', 'f', 'h', 'i', 'u', 'b', 'z', 'r',
+    # 'a', 's', 'e', 'c', 'y', 'o', 'q', 'l', 'v', 'p', 'n', 'x', 'd', 'w', 't', 'j', 'g'} '''
+    wrong_letters = []
+    word_solved = False
+
+    while attempts_left > 0 and not word_solved:
+        print(f'Word : {display_partial_guessed_word(word, is_correct_letters_array)}')
+        print(f'Attempts Remaining: {attempts_left}')
+        print('Previous Guesses: {0}'.format(' '.join(wrong_letters)))
+
+        next_letter_guessed = guess_next_letter()
+        if next_letter_guessed in word:
+            print(f'{next_letter_guessed} is in the word !')
+            for i in range(len(word)):  # Reveal matching letters
+                if word[i] == next_letter_guessed:
+                    is_correct_letters_array[i] = True
+        else:
+            print(f'{next_letter_guessed} is NOT in the word !')
+            attempts_left -= 1
+            wrong_letters.append(next_letter_guessed)
+
+        if False not in is_correct_letters_array:
+            word_solved = True
+            print('Congratulations - You Won  !')
+            print('The word is "{0}"'.format(word))
+
+    if not word_solved:
+        print('Sorry - You Lost The Game  !')
+    try_again = input('\nWould You Like To Try Again ? [y/Y] ')
+    return try_again.lower() == 'y'  # if (try_again.lower() == 'y') => returns True
+
+
+if __name__ == '__main__':
+    while play_hangman():
+        print()
